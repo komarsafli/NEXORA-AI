@@ -1,0 +1,188 @@
+
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NEXORA AI</title>
+<style>
+*{box-sizing:border-box}
+body{
+  margin:0;
+  min-height:100vh;
+  background:#080d18;
+  color:white;
+  font-family:Tahoma,sans-serif;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  padding:20px;
+}
+.app{
+  width:100%;
+  max-width:430px;
+  text-align:center;
+  background:#111b2d;
+  border:1px solid #263b5c;
+  border-radius:25px;
+  padding:25px 20px;
+}
+h1{color:#38bdf8;letter-spacing:3px}
+.subtitle{color:#9caec8;font-size:13px}
+.circle{
+  width:145px;
+  height:145px;
+  border-radius:50%;
+  margin:30px auto;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#102d48;
+  border:3px solid #168bd0;
+  font-size:48px;
+  box-shadow:0 0 30px #0879c855;
+}
+.circle.active{
+  animation:pulse 1s infinite;
+}
+@keyframes pulse{
+  50%{box-shadow:0 0 45px #38bdf8}
+}
+button{
+  width:100%;
+  border:0;
+  padding:15px;
+  border-radius:13px;
+  font-size:16px;
+  font-weight:bold;
+  background:#0284c7;
+  color:white;
+  margin-top:12px;
+}
+button:active{transform:scale(.98)}
+#status{color:#38bdf8;margin:15px 0}
+#result{
+  background:#0b1423;
+  border-radius:12px;
+  padding:16px;
+  min-height:65px;
+  line-height:2;
+  text-align:right;
+}
+.footer{font-size:11px;color:#71839d;margin-top:25px}
+</style>
+</head>
+<body>
+<div class="app">
+  <h1>NEXORA AI</h1>
+  <div class="subtitle">دستیار هوشمند شخصی شما</div>
+
+  <div class="circle" id="circle">✦</div>
+
+  <div id="status">آماده دریافت فرمان</div>
+
+  <div id="result">سلام! من NEXORA هستم. منتظر فرمان توام.</div>
+
+  <button onclick="listen()">🎙️ شروع شنیدن</button>
+  <button onclick="stopListening()" style="background:#334155">
+    توقف شنیدن
+  </button>
+
+  <div class="footer">NEXORA AI • VERSION 1.0</div>
+</div>
+
+<script>
+const statusBox = document.getElementById("status");
+const resultBox = document.getElementById("result");
+const circle = document.getElementById("circle");
+
+const SpeechRecognition =
+  window.SpeechRecognition ||
+  window.webkitSpeechRecognition;
+
+let recognition;
+
+function speak(text){
+  if(!("speechSynthesis" in window)) return;
+
+  speechSynthesis.cancel();
+
+  const voice = new SpeechSynthesisUtterance(text);
+  voice.lang = "fa-IR";
+  voice.rate = 0.9;
+  voice.pitch = 0.85;
+
+  speechSynthesis.speak(voice);
+}
+
+function respond(command){
+  let answer = "فرمانت رو شنیدم، ولی هنوز اجرای این دستور رو یاد نگرفتم.";
+
+  if(command.includes("سلام")){
+    answer = "سلام! NEXORA آماده به کار است.";
+  }
+  else if(command.includes("اسمت")){
+    answer = "من نکسا هستم، دستیار هوشمند تو.";
+  }
+  else if(command.includes("خوبی")){
+    answer = "ممنون، آماده انجام فرمان‌های تو هستم.";
+  }
+  else if(command.includes("ساعت")){
+    answer = "برای اطلاع از ساعت، ساعت گوشی را بررسی کن.";
+  }
+  else if(command.includes("کروم")){
+    answer = "در نسخه بعدی قابلیت بازکردن کروم را اضافه می‌کنیم.";
+  }
+
+  resultBox.textContent = answer;
+  speak(answer);
+}
+
+function listen(){
+  if(!SpeechRecognition){
+    statusBox.textContent =
+      "مرورگر شما از تشخیص گفتار پشتیبانی نمی‌کند.";
+    return;
+  }
+
+  recognition = new SpeechRecognition();
+  recognition.lang = "fa-IR";
+  recognition.continuous = false;
+  recognition.interimResults = false;
+
+  recognition.onstart = () => {
+    statusBox.textContent = "دارم گوش می‌دم...";
+    circle.classList.add("active");
+  };
+
+  recognition.onresult = (event) => {
+    const command =
+      event.results[0][0].transcript.trim();
+
+    resultBox.textContent = "فرمان: " + command;
+    respond(command);
+  };
+
+  recognition.onerror = (event) => {
+    statusBox.textContent = "خطا: " + event.error;
+  };
+
+  recognition.onend = () => {
+    circle.classList.remove("active");
+    if(statusBox.textContent === "دارم گوش می‌دم..."){
+      statusBox.textContent = "آماده دریافت فرمان";
+    }
+  };
+
+  recognition.start();
+}
+
+function stopListening(){
+  if(recognition) recognition.stop();
+  if("speechSynthesis" in window) speechSynthesis.cancel();
+  circle.classList.remove("active");
+  statusBox.textContent = "شنیدن متوقف شد";
+}
+</script>
+</body>
+</html>
